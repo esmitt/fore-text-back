@@ -13,6 +13,7 @@ class ImageLoaderFromFile(ImageLoaderInterface):
 
     @override
     def set_source(self, source: str) -> bool:
+        self._path = ""
         if not exists(source):
             logger.error(f"File {source} doesn't exist")
             return False
@@ -22,9 +23,13 @@ class ImageLoaderFromFile(ImageLoaderInterface):
 
     @override
     def load(self) -> bool:
+        if len(self._path) == 0:
+            logger.warning(f"The path file is empty")
+            return False
         try:
             self._image = cv2.imread(self._path)
             if self._image is None:
+                logger.debug(f"Image couldn't be loaded {self._path}")
                 raise ValueError
             logger.debug(f"File of dimensions {self._image.shape}")
             return True
@@ -32,5 +37,6 @@ class ImageLoaderFromFile(ImageLoaderInterface):
             logger.exception(f"Error loading image from {self._path}: {e}")
             return False
 
+    @override
     def get_source(self) -> np.ndarray:
         return self._image

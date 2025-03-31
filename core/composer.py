@@ -1,7 +1,3 @@
-import numpy
-from matplotlib.pyplot import imshow
-from pygments.styles.dracula import background
-
 from core.interfaces.background import BackgroundInterface
 from core.interfaces.image_loader import ImageLoaderInterface
 from core.interfaces.foreground import ForegroundInterface
@@ -78,17 +74,20 @@ class Composer:
         shape = self._background.get_background().shape
         self._output = np.zeros(shape)
         background_output = self._background.get_background().copy()
-        image_with_text = cv2.putText(background_output,
-                                      self._text.get_text(),
-                                      (150, 600),
-                                      cv2.FONT_HERSHEY_SIMPLEX,
-                                      9,
-                                      (10, 25, 255),
-                                      9,
-                                      cv2.LINE_AA)
+        image_with_text = self._text.render(background_output)
+        # image_with_text = cv2.putText(background_output,
+        #                               self._text.get_text(),
+        #                               (150, 600),
+        #                               cv2.FONT_HERSHEY_SIMPLEX,
+        #                               9,
+        #                               (10, 25, 255),
+        #                               9,
+        #                               cv2.LINE_AA)
+
+
         self._output = np.where(self._foreground.get_mask3d() == 255,
-                          self._foreground.get_foreground(),
-                          image_with_text)
+                                self._foreground.get_foreground(),
+                                image_with_text)
 
     def get_output(self) -> np.ndarray:
         if self._output is not None:

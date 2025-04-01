@@ -1,4 +1,4 @@
-from numpy import ndarray, zeros
+from numpy import ndarray
 from typing_extensions import override
 from typing import Optional
 

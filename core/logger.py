@@ -33,7 +33,7 @@ class InterceptHandler(logging.Handler):
 logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
 logging.getLogger().handlers = [InterceptHandler()]
 
-# FastAPI's internal logger redirection
+# FastAPI internal logger redirection
 logging.getLogger("uvicorn.access").handlers = [InterceptHandler()]
 logging.getLogger("uvicorn.error").handlers = [InterceptHandler()]
 

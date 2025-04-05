@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 @dataclass
 class RGBAColor:
@@ -17,3 +18,6 @@ class Position:
 
     def to_tuple(self):
         return self.x, self.y
+
+def get_list_extensions(extensions_str: str) -> List[str]:
+    return [item.strip() for item in extensions_str.split(',')]

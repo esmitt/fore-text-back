@@ -1,18 +1,18 @@
 from core.interfaces.background import BackgroundInterface
 from core.interfaces.image_loader import ImageLoaderInterface
 from core.interfaces.foreground import ForegroundInterface
-from core.text import TextTTF
+from core.text import TextFT
 from core.logger import logger
 from typing import Optional
 import cv2
 import numpy as np
 
 class Composer:
-    def __init__(self, image_loader: ImageLoaderInterface, foreground: ForegroundInterface, background: BackgroundInterface, text: Optional[TextTTF] = None):
+    def __init__(self, image_loader: ImageLoaderInterface, foreground: ForegroundInterface, background: BackgroundInterface, text: Optional[TextFT] = None):
         self._image_loader: ImageLoaderInterface = image_loader
         self._foreground: ForegroundInterface = foreground
         self._background: BackgroundInterface = background
-        self._text: TextTTF = text
+        self._text: TextFT = text
         self._processed = self._processing()
         self._output = None
         self._composing()
@@ -49,7 +49,7 @@ class Composer:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def set_text(self, text: TextTTF):
+    def set_text(self, text: TextFT):
         self._text = text
         self._composing()
 
@@ -61,11 +61,11 @@ class Composer:
 
             if not self._foreground.extract(image=self._image_loader.get_source(), threshold=0.95):
                 logger.error("Cannot be run due the foreground extractor")
-            self.show_image(self._foreground.get_foreground())
+            # self.show_image(self._foreground.get_foreground())
 
             if not self._background.extract(image=self._image_loader.get_source().copy()):
                 logger.error("Cannot be run due the background extractor")
-            self.show_image(self._background.get_background())
+            # self.show_image(self._background.get_background())
         except ValueError:
             return False
         return True

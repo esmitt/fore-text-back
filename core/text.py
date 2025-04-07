@@ -8,7 +8,7 @@ from core.common import RGBAColor, Position
 from core.fonts import Fonts
 from typing import Optional, List
 
-class TextTTF:
+class TextFT:
     def __init__(self, text: str = "Sample",
                  font_size: int = 100,
                  position: Position = Position(0, 0),
@@ -82,13 +82,13 @@ class TextTTF:
     #     self._current_font = self._load_true_font(font_name, font_path)
 
     @property
-    def font_type(self):
+    def font_type(self) -> FreeTypeFont:
         return self._current_font
 
     @font_type.setter
-    def font_type(self, value: str):
+    def font_type(self, value: str) -> None:
         try:
-            self._load_font(value)
+            self._current_font = self._load_font(value)
         except Exception as exc:
             logger.error(f"Font {value} isn't valid: {exc}")
 

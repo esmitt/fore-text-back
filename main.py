@@ -17,7 +17,7 @@ if __name__ == "__main__":
         text_ft: TextFT = TextFT("example",
                                  position=Position(150, 350),
                                  font_size=300,
-                                 font_color=RGBAColor(24, 250, 24, 20))
+                                 font_color=RGBAColor(24, 250, 24, 120))
     except Exception as exc:
         logger.exception(f"{exc}")
         exit(0)
@@ -30,7 +30,11 @@ if __name__ == "__main__":
     composer: Composer = Composer(image_loader, foreground, background, text_ft)
     text_ft.font_type = list_fonts[0]
     composer.set_text(text_ft)
-    Composer.show_image(composer.get_output())
+    output_image = composer.get_output()
+    if output_image is not None:
+        Composer.show_image(output_image)
+    else:
+        logger.critical("Failed to get composed image.")
 
     text_ft.set_text("Impact")
     text_ft.font_color = RGBAColor(200, 20, 20)

@@ -15,7 +15,11 @@ class Composer:
         self._text: TextFT = text
         self._processed = self._processing()
         self._output = None
-        self._composing()
+        if self._processed:
+            self._composing()
+        else:
+            logger.error("Composer: Skipping composition due to processing errors.")
+
 
     @staticmethod
     def show_image(image: np.ndarray, max_size:tuple =(800, 600)):
@@ -41,7 +45,7 @@ class Composer:
                     new_width = max_width
                     new_height = int(max_width / aspect_ratio)
 
-            resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+            resized_image = cv2.resize(image, dsize=(new_width, new_height), interpolation=cv2.INTER_AREA)
             cv2.imshow(window_name, resized_image)
         else:
             cv2.imshow(window_name, image)
@@ -71,16 +75,55 @@ class Composer:
         return True
 
     def _composing(self):
-        shape = self._background.get_background().shape
-        self._output = np.zeros(shape)
-        background_output = self._background.get_background().copy()
-        image_with_text = self._text.render(background_output)
+        try:
+            background_img = self._background.get_background()
+            if background_img is None:
+                logger.error("Composer: Cannot compose, background is None.")
+                self._output = None
+                return
+            if not isinstance(background_img, np.ndarray):
+                logger.error(f"Composer: Background is not a NumPy array, type is {type(background_img)}")
+                self._output = None
+                return
 
-        self._output = np.where(self._foreground.get_mask3d() == 255,
-                                self._foreground.get_foreground(),
-                                image_with_text)
+            shape = background_img.shape
+            self._output = np.zeros(shape, dtype=background_img.dtype) # match dtype
+            background_output = background_img.copy()
 
-    def get_output(self) -> np.ndarray:
+            if self._text is not None:
+                image_with_text = self._text.render(background_output)
+                if image_with_text is None:
+                    logger.error("Composer: Text rendering failed.")
+                    self._output = None
+                    return
+                if not isinstance(image_with_text, np.ndarray):
+                    logger.error(f"Composer: Text rendering returned non-array type: {type(image_with_text)}")
+                    self._output = None
+                    return
+            else:
+                logger.warning("Composer: No text object provided, composing without text.")
+                image_with_text = background_output # Use original background if no text
+
+            foreground_img = self._foreground.get_foreground()
+            mask_3d = self._foreground.get_mask3d()
+
+            if foreground_img is None or not isinstance(foreground_img, np.ndarray):
+                logger.error(f"Composer: Invalid foreground image (None or type {type(foreground_img)}).")
+                self._output = None
+                return
+            if mask_3d is None or not isinstance(mask_3d, np.ndarray):
+                logger.error(f"Composer: Invalid foreground mask (None or type {type(mask_3d)}).")
+                self._output = None
+                return
+
+            self._output = np.where(mask_3d == 255, foreground_img, image_with_text)
+            logger.debug(f"Composer: Composition successful. Output shape: {self._output.shape}, dtype: {self._output.dtype}")
+        except Exception as exc:
+            logger.error(f"Composer: Unexpected error during composing: {exc}", exc_info=True) # Log traceback
+            self._output = None
+
+    def get_output(self) -> Optional[np.ndarray]:
         if self._output is not None:
             return self._output
-        raise FileNotFoundError
+        logger.warning("Composer.get_output: Output is None.")
+        return None

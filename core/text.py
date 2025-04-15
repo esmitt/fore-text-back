@@ -112,15 +112,51 @@ class TextFT:
     def set_position(self, position: Position):
         self._position = position
 
-    def render(self, background_image: np.ndarray) -> np.ndarray:
+    def render(self, background_image: np.ndarray) -> Optional[np.ndarray]:
         try:
+            # Ensure input is valid BGR numpy array
+            if not isinstance(background_image, np.ndarray) or background_image.ndim != 3:
+                logger.error("Render: Invalid background image input.")
+                return None
+
             image_pil = Image.fromarray(cv2.cvtColor(background_image, cv2.COLOR_BGR2RGB))
-            draw = ImageDraw.Draw(image_pil)
+            if image_pil.mode != 'RGBA':
+                image_pil = image_pil.convert('RGBA')
 
-            draw.text(xy=self._position.to_tuple(), text=self._text, font=self._current_font, fill=self._font_color.to_tuple())
+            # Ensure font is loaded
+            if not self._current_font:
+                logger.error("Render: Font not loaded.")
+                return None
 
-            image_cv = cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGB2BGR)
+            try:
+                bbox = self._current_font.getbbox(self._text)  # Returns (left, top, right, bottom)
+                offset_x = bbox[0]  # Typically 0 or negative
+                offset_y = bbox[1]  # Typically negative for ascenders
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                logger.debug(f"Font getbbox: {bbox}")
+            except Exception as e:
+                logger.error(f"Render: Error calculating text size: {e}")
+                return None
+
+            # Create text surface with minimal padding
+            text_surface = Image.new(mode='RGBA', size=(int(text_width), int(text_height)), color=0)
+            text_draw = ImageDraw.Draw(text_surface)
+
+            # Draw text on the surface, adjusting for offsets
+            # Position the text to account for any negative offsets (e.g., ascenders)
+            text_draw.text((-offset_x, -offset_y), self._text, font=self._current_font, fill=self._font_color.to_tuple())
+
+            # Paste text surface onto main image
+            paste_x = max(0, min(self._position.to_tuple()[0], image_pil.width - text_surface.width))
+            paste_y = max(0, min(self._position.to_tuple()[1], image_pil.height - text_surface.height))
+            image_pil.paste(text_surface, (paste_x, paste_y), text_surface)
+
+            # Convert back to OpenCV BGR
+            image_cv = cv2.cvtColor(np.array(image_pil), cv2.COLOR_RGBA2BGR)
+
             return image_cv
+
         except Exception as exc:
-            logger.error(f"Error rendering text: {exc}")
-            return background_image # return the original image
+            logger.error(f"Error rendering text: {exc}", exc_info=True)
+            return None

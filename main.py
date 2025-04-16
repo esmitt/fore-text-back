@@ -4,7 +4,7 @@ from core.foreground import Foreground, ForegroundInterface
 from core.background import Background, BackgroundInterface
 from core.text import TextFT
 from core.common import Position, RGBAColor
-from core.logger import logger
+from common.logger import logger
 from dotenv import load_dotenv
 from pathlib import Path
 

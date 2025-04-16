@@ -2,7 +2,7 @@ from core.interfaces.background import BackgroundInterface
 from core.interfaces.image_loader import ImageLoaderInterface
 from core.interfaces.foreground import ForegroundInterface
 from core.text import TextFT
-from core.logger import logger
+from common.logger import logger
 from typing import Optional
 import cv2
 import numpy as np

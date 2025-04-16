@@ -1,6 +1,6 @@
 from typing_extensions import override
 from core.interfaces.image_loader import ImageLoaderInterface
-from core.logger import logger
+from common.logger import logger
 import cv2
 import numpy as np
 from typing import Optional

@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from core.logger import logger
+from common.logger import logger
 from core.common import get_list_extensions
 from typing import Dict, List, Optional
 

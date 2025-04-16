@@ -1,6 +1,6 @@
 from core.interfaces.foreground import ForegroundInterface
 import mediapipe as mp
-from core.logger import logger
+from common.logger import logger
 import types
 from typing import Optional, override
 import numpy as np

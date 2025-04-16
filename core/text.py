@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from PIL.ImageFont import FreeTypeFont
 
-from core.logger import logger
+from common.logger import logger
 from core.common import RGBAColor, Position
 from core.fonts import Fonts
 from typing import Optional, List

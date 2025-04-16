@@ -4,7 +4,7 @@ import cv2
 from PIL.ImageFont import FreeTypeFont
 
 from common.logger import logger
-from core.common import RGBAColor, Position
+from common.utils import RGBAColor, Position
 from core.fonts import Fonts
 from typing import Optional, List
 
@@ -21,8 +21,10 @@ class TextFT:
 
         self._text:str = text
         # this should be before the load_font
-        self._font_size: int = font_size
+        self._font_size: int = font_size if font_size else 100
         self._current_font: Optional[FreeTypeFont] = self._load_font(None)
+        if self._current_font is None:
+            logger.error("Not possible lo load a font")
         self._position:Position = position
         self._font_color: RGBAColor = font_color
 
@@ -40,11 +42,10 @@ class TextFT:
         """
         font_to_load: Optional[str]
         font_path: Optional[str]
-
         if font_name is None:
             font_name_list: list[str] = self._font_engine.get_fonts()
             if not font_name_list:
-                logger.debug(f"The variable font_types_list is empty")
+                logger.error("No fonts available to load", exc_info=True)
                 raise ValueError("No fonts available to load")
             # choose the first one in the list
             font_to_load = font_name_list[0]
@@ -55,8 +56,19 @@ class TextFT:
             font_to_load = font_name
             logger.info(f"Load requested font: {font_to_load}")
             font_path = self._font_engine.get_font(font_name)
-
-        return self._load_true_font(font_name, font_path)
+        try:
+            return self._load_true_font(font_name, font_path)
+        except RuntimeError as e:
+            logger.warning(f"Failed to load font '{font_to_load}'. Attempting fallback font.")
+            fallback_fonts = [f for f in self._font_engine.get_fonts() if f != font_to_load]
+            for fallback in fallback_fonts:
+                font_path = self._font_engine.get_font(fallback)
+                try:
+                    return self._load_true_font(fallback, font_path)
+                except RuntimeError:
+                    continue
+            logger.error("All font loading attempts failed.")
+            return None
 
     def _load_true_font(self, font_name: str, font_path: str) -> Optional[FreeTypeFont]:
         font_loaded: Optional[FreeTypeFont]
@@ -64,11 +76,11 @@ class TextFT:
             font_loaded = ImageFont.truetype(font_path, self._font_size)
             logger.debug(f"Font {font_loaded.getname()} loaded correctly")
         except IOError as io_exc:
-            logger.error(f"Error loading font file '{font_path}': {io_exc}. The font couldn't be changed.")
+            logger.error(f"IOError loading font file '{font_path}': {io_exc}. The font couldn't be changed.")
             raise RuntimeError(f"Not possible to load the font {font_name}") from io_exc
         except Exception as exc:
-            logger.error(f"An unexpected error occurred during font loading for '{font_path}': {exc}")
-            raise RuntimeError(f"Failed to load font '{font_path}' due to an unexpected error. The font couldn't be changed.") from exc
+            logger.error(f"Unexpected error loading font '{font_path}': {exc}", exc_info=True)
+            raise RuntimeError(f"Failed to load font '{font_name}' due to an unexpected error.") from exc
         return font_loaded
 
     def set_text(self, value: str) -> None:
@@ -76,10 +88,6 @@ class TextFT:
 
     def get_available_fonts(self) -> List[str]:
         return self._font_engine.get_fonts()
-
-    # def set_font(self, font_name: str) -> None:
-    #     font_path: str = self._font_engine.get_font(font_name)
-    #     self._current_font = self._load_true_font(font_name, font_path)
 
     @property
     def font_type(self) -> FreeTypeFont:

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from common.logger import logger
-from core.common import get_list_extensions
+from common.utils import get_list_extensions
 from typing import Dict, List, Optional
 
 class Fonts:
@@ -12,6 +12,7 @@ class Fonts:
         FONT_EXTENSION can be a comma-separated list (e.g., "ttf,otf").
         """
         self._font_path: Path = Path(os.getenv("FONT_FOLDER", "temp_font"))
+        logger.debug(f"Font folder set to: {self._font_path}")
         if not Path.is_dir(self._font_path):
             logger.critical(f"The folder for fonts, isn't available: `{self._font_path}`")
             raise FileNotFoundError(f"Font folder '{self._font_path}' does not exist")

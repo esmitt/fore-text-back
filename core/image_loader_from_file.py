@@ -13,6 +13,9 @@ class ImageLoaderFromFile(ImageLoaderInterface):
 
     @override
     def set_source(self, source: str) -> bool:
+        if not isinstance(source, str):
+            logger.error("Source must be string")
+            return False
         self._path = ""
         if not exists(source):
             logger.error(f"File {source} doesn't exist")

@@ -5,7 +5,7 @@ from core.fonts import Fonts
 import os
 import shutil
 from typing import List
-from core.common import get_list_extensions
+from common.utils import get_list_extensions
 
 TEST_DIR = Path(__file__).parent
 TEST_DATA_DIR = TEST_DIR / "test_data"
@@ -34,7 +34,7 @@ def setup_real(tmp_path: Path) -> Optional[Fonts]:
 def setup_fake(tmp_path: Path) -> Optional[Fonts]:
     font_folder = tmp_path / "fonts"
     Path.mkdir(font_folder)
-
+    os.environ["DEFAULT_FONT_SIZE"] = "100"
     os.environ["FONT_EXTENSION"] = "otf,ttf"
 
     # dummy font files for each extension (should be only 2)

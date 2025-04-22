@@ -1,6 +1,6 @@
 import pytest
 
-from core.common import RGBAColor, Position
+from common.utils import RGBAColor, Position
 from core.text import TextFT
 from PIL.ImageFont import FreeTypeFont
 from tests.conftest import setup_real, setup_fake

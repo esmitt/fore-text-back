@@ -1,9 +1,10 @@
 from core.composer import Composer
-from core.image_loader import ImageLoaderFromFile, ImageLoaderInterface
+from core.interfaces.image_loader import ImageLoaderInterface
+from core.image_loader_from_file import ImageLoaderFromFile
 from core.foreground import Foreground, ForegroundInterface
 from core.background import Background, BackgroundInterface
 from core.text import TextFT
-from core.common import Position, RGBAColor
+from common.utils import Position, RGBAColor, HorizontalAlignment, VerticalAlignment
 from common.logger import logger
 from dotenv import load_dotenv
 from pathlib import Path
@@ -14,10 +15,13 @@ if __name__ == "__main__":
     foreground: ForegroundInterface = Foreground()
     background: BackgroundInterface = Background()
     try:
-        text_ft: TextFT = TextFT("example",
-                                 position=Position(150, 350),
-                                 font_size=300,
-                                 font_color=RGBAColor(24, 250, 24, 120))
+        text_ft: TextFT = TextFT(
+            "example",
+            font_size=250,
+            h_align=HorizontalAlignment.RIGHT,
+            v_align=VerticalAlignment.CENTER,
+            font_color=RGBAColor(24, 250, 24, 120)
+        )
     except Exception as exc:
         logger.exception(f"{exc}")
         exit(0)
@@ -29,30 +33,44 @@ if __name__ == "__main__":
 
     composer: Composer = Composer(image_loader, foreground, background, text_ft)
     text_ft.font_type = list_fonts[0]
-    composer.set_text(text_ft)
-    output_image = composer.get_output()
-    if output_image is not None:
+    success, position = composer.set_text(text_ft)
+    output_image, parameters = composer.get_output()
+
+    if output_image is not None and success:
+        logger.info(f"First image success: {success}, position: ({position.x}, {position.y}), parameters: {parameters}")
         Composer.show_image(output_image)
     else:
         logger.critical("Failed to get composed image.")
+        if output_image is not None:
+            Composer.show_image(output_image)  # Show original image if failed
 
-    text_ft.set_text("Impact")
+    # Set new text and adjust position
+    text_ft.set_text("Impacting more")
     text_ft.font_color = RGBAColor(200, 20, 20)
     text_ft.font_type = list_fonts[1]
-    composer.set_text(text_ft)
-    Composer.show_image(composer.get_output())
+    text_ft.h_align = HorizontalAlignment.LEFT
+    text_ft.v_align = VerticalAlignment.UP
+    success, position = composer.set_text(text_ft)
+    output_image, parameters = composer.get_output()
 
-    # Composer.show_image(composer.get_output())
-    # text_ttf.set_text("Boludosáé")
-    # text_ttf.font_color = RGBAColor(r = 210, g = 98, b = 133, a = 200)
-    # # change font and color and size
-    # text_ttf.font_size = text_ttf.font_size * 0.5
-    # text_ttf.font_type = "asda"
-    # composer.set_text(text_ttf)
-    # text_ttf.font_size = text_ttf.font_size * 1.6
-    # Composer.show_image(composer.get_output())
-    # text_ttf.set_text("Testing")
-    # text_ttf.font_color = RGBAColor(r = 110, g = 198, b = 13, a = 20)
-    # text_ttf.font_type = None
-    # composer.set_text(text_ttf)
-    # Composer.show_image(composer.get_output())
+    if output_image is not None and success:
+        logger.info(f"Second image success: {success}, position: ({position.x}, {position.y}), parameters: {parameters}")
+        Composer.show_image(output_image)
+
+        # Move text
+        new_position = Position(position.x + 50, position.y + 200)
+        text_ft.set_position(new_position)
+        success, position = composer.set_text(text_ft)
+        output_image, new_parameters = composer.get_output()
+
+        if output_image is not None and success:
+            logger.info(f"Moved image success: {success}, new position: ({position.x}, {position.y}), parameters: {new_parameters}")
+            Composer.show_image(output_image)
+        else:
+            logger.critical("Failed to compose moved image.")
+            if output_image is not None:
+                Composer.show_image(output_image)  # Show original image if failed
+    else:
+        logger.critical("Failed to get composed image.")
+        if output_image is not None:
+            Composer.show_image(output_image)  # Show original image if failed
